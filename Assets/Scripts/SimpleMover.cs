@@ -1,35 +1,79 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[RequireComponent(typeof(Rigidbody))]
 public class SimpleMover : MonoBehaviour {
 	public float maxSpeed;
 	public Vector3 velocity;
+	private Vector3 unfixedVelocity;
 	public float acceleration;
 	public float handling;
-	public float dampening = 0.9f;
-	public float dampeningThreshold;
+	public float cutSpeedThreshold = 0.1f;
 	public float externalSpeedMultiplier = 1;
-	public SimpleFreeze freeze;
 	private bool moving;
 	public bool Moving
 	{
 		get { return moving; }
 	}
+	public Rigidbody body;
+	public float bodylessDampening = 1;
+	public bool slowDown = false;
 
-	void Update() {
-		externalSpeedMultiplier = Mathf.Max(externalSpeedMultiplier, 0);
-
-		if (velocity.sqrMagnitude > Mathf.Pow(maxSpeed, 2) * externalSpeedMultiplier)
+	void Awake()
+	{
+		if (body == null)
 		{
-			velocity = velocity.normalized * maxSpeed * externalSpeedMultiplier;
+			body = GetComponent<Rigidbody>();
+		}
+	}
+
+	void FixedUpdate() {
+
+		if (unfixedVelocity != velocity)
+		{
+			velocity = unfixedVelocity;
+			if (body != null)
+			{
+				body.velocity = velocity;
+			}
+		}
+		else
+		{
+			if (body != null)
+			{
+				velocity = body.velocity;
+				
+			}
+			unfixedVelocity = velocity;
 		}
 
-		ApplyFreezes();
-		transform.position += velocity * Time.deltaTime;
+		// If slowing down without a rigidbody attached, dampen speed.
+		if (slowDown && body == null)
+		{
+			velocity *= bodylessDampening;
+		}
 
-		if (velocity.sqrMagnitude < Mathf.Pow(dampeningThreshold, 2)) {
+		// Move, using rigidbody if attached.
+		if (body != null && !body.isKinematic)
+		{
+			body.velocity = velocity;
+		}
+		else
+		{
+			transform.position += velocity * Time.deltaTime;
+		}
+		unfixedVelocity = velocity;
+
+		// Cut the speed to zero if going slow enough.
+		if (velocity.sqrMagnitude < Mathf.Pow(cutSpeedThreshold, 2)) {
 			velocity = Vector3.zero;
+			unfixedVelocity = Vector3.zero;
+			if (body != null && !body.isKinematic)
+			{
+				body.velocity = Vector3.zero;
+			}			
 			moving = false;
+			slowDown = false;
 		}
 		else
 		{
@@ -40,32 +84,64 @@ public class SimpleMover : MonoBehaviour {
 	public void Stop()
 	{
 		velocity = Vector3.zero;
+		unfixedVelocity = Vector3.zero;
+		if (body != null && !body.isKinematic)
+		{
+			body.velocity = Vector3.zero;
+		}
+		moving = false;
 	}
 
-	public void Accelerate(Vector3 direction) {
-		if (direction.sqrMagnitude != 1)
+	public void Accelerate(Vector3 velocityChange, bool forceFullAcceleration = true, bool forceFullTurning = true)
+	{
+		// Dividing by deltaTime later so avoid even trying to change velocity if time has not changed.
+		if (Time.deltaTime <= 0)
 		{
-			direction.Normalize();
+			return;
 		}
 
-		if (velocity.sqrMagnitude <= 0) 
-		{
-			velocity += direction * acceleration * Time.deltaTime;
-		}
-		else 
-		{
-			Vector3 parallel = Helper.ProjectVector(velocity, direction);
-			Vector3 perpendicular = direction - parallel;
+		Vector3 parallel = velocityChange;
+		Vector3 perpendicular = Vector3.zero;
 
-			velocity += ((parallel * acceleration) + (perpendicular * handling)) * Time.deltaTime;
+		// If already moving separate acceleration into components parallel and perpendicular to velocity.
+		if (velocity.sqrMagnitude > 0)
+		{
+			parallel = Helper.ProjectVector(velocity, velocityChange);
+			perpendicular = velocityChange - parallel;
 		}
 
-		if (velocity.sqrMagnitude > Mathf.Pow(maxSpeed, 2))
+		// If forcing full acceleration or attempting to accelerate beyond limits, clamp to max acceleration.
+		if (forceFullAcceleration || parallel.sqrMagnitude > Mathf.Pow(acceleration, 2))
 		{
-			velocity = velocity.normalized * maxSpeed;
+			parallel = parallel.normalized * acceleration;
 		}
-		velocity *= Mathf.Max(externalSpeedMultiplier, 0);
-		ApplyFreezes();
+
+		// If forcing full turning or attempting to turn beyond limits, clamp to max handling.
+		if (forceFullTurning || perpendicular.sqrMagnitude > Mathf.Pow(handling, 2))
+		{
+			perpendicular = perpendicular.normalized * handling;
+			// Avoid overshooting desired direction.
+			if (forceFullTurning)
+			{
+				Vector3 oldVelPerpAcceleration = velocity - Helper.ProjectVector(velocityChange, velocity);
+				Vector3 newVelocity = velocity + perpendicular * Time.deltaTime;
+				Vector3 newVelPerpAcceleration = newVelocity - Helper.ProjectVector(velocityChange, newVelocity);
+				if (Vector3.Dot(oldVelPerpAcceleration, newVelPerpAcceleration) < 0)
+				{
+					perpendicular = -oldVelPerpAcceleration / Time.deltaTime;
+				}
+			}
+		}
+
+		// Accelerate by recombining parallel and perpendicular components.
+		unfixedVelocity += (parallel + perpendicular) * Time.deltaTime;
+
+		// Clamp down to max speed and if a rigid body is attached, update it.
+		if (unfixedVelocity.sqrMagnitude > Mathf.Pow(maxSpeed, 2))
+		{
+			unfixedVelocity = unfixedVelocity.normalized * maxSpeed;
+		}
+		unfixedVelocity *= Mathf.Max(externalSpeedMultiplier, 0);
 	}
 
 	public void Move(Vector3 direction, float speed, bool clampSpeed = true)
@@ -78,47 +154,6 @@ public class SimpleMover : MonoBehaviour {
 		{
 			speed = maxSpeed;
 		}
-		velocity = direction * speed * Mathf.Max(externalSpeedMultiplier, 0);
-		ApplyFreezes();
-		transform.position += velocity * Time.deltaTime;
+		unfixedVelocity = direction * speed * Mathf.Max(externalSpeedMultiplier, 0);
 	}
-
-	public void MoveTo(Vector3 position, bool updateVelocity = false)
-	{
-		if (updateVelocity && Time.deltaTime > 0)
-		{
-			velocity = (position - transform.position) / Time.deltaTime;
-			ApplyFreezes();
-		}
-		transform.position = position;
-	}
-
-	public void SlowDown()
-	{
-		velocity *= dampening;
-	}
-
-	private void ApplyFreezes()
-	{
-		if (freeze.velocityX)
-		{
-			velocity.x = 0;
-		}
-		if (freeze.velocityY)
-		{
-			velocity.y = 0;
-		}
-		if (freeze.velocityZ)
-		{
-			velocity.z = 0;
-		}
-	}
-}
-
-[System.Serializable]
-public class SimpleFreeze
-{
-	public bool velocityX;
-	public bool velocityY;
-	public bool velocityZ;
 }
