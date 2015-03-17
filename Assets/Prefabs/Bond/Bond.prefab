@@ -265,6 +265,7 @@ MonoBehaviour:
   links:
   - {fileID: 11400006}
   - {fileID: 11400004}
+  linksPerTextureRepeat: 8
   bondPullPrefab: {fileID: 196338, guid: 6d554e9a852ad2745a548f8ced2807d9, type: 2}
   stats:
     attachSpring1: 0
@@ -273,7 +274,7 @@ MonoBehaviour:
     maxDistance: 25
     relativeWarningDistance: .5
     endsWidth: .0199999996
-    midWidth: .5
+    midWidth: 1
     addLinkDistance: .5
     removeLinkDistance: .449999988
     springForce: 4000
@@ -342,7 +343,7 @@ LineRenderer:
   m_LightmapIndex: 255
   m_LightmapTilingOffset: {x: 1, y: 1, z: 0, w: 0}
   m_Materials:
-  - {fileID: 2100000, guid: d67c56189416cf04dbf512028b98e880, type: 2}
+  - {fileID: 2100000, guid: a8bb8a03c5fe93e46a7606b17eb7314d, type: 2}
   m_SubsetIndices: 
   m_StaticBatchRoot: {fileID: 0}
   m_UseLightProbes: 0
@@ -358,10 +359,10 @@ LineRenderer:
     endWidth: 1
     m_StartColor:
       serializedVersion: 2
-      rgba: 16776960
+      rgba: 4294967295
     m_EndColor:
       serializedVersion: 2
-      rgba: 4281269558
+      rgba: 4294967295
   m_UseWorldSpace: 1
 --- !u!120 &12000004
 LineRenderer:
@@ -375,7 +376,7 @@ LineRenderer:
   m_LightmapIndex: 255
   m_LightmapTilingOffset: {x: 1, y: 1, z: 0, w: 0}
   m_Materials:
-  - {fileID: 2100000, guid: d67c56189416cf04dbf512028b98e880, type: 2}
+  - {fileID: 2100000, guid: a8bb8a03c5fe93e46a7606b17eb7314d, type: 2}
   m_SubsetIndices: 
   m_StaticBatchRoot: {fileID: 0}
   m_UseLightProbes: 0
@@ -391,10 +392,10 @@ LineRenderer:
     endWidth: 1
     m_StartColor:
       serializedVersion: 2
-      rgba: 4294475595
+      rgba: 4294967295
     m_EndColor:
       serializedVersion: 2
-      rgba: 16776960
+      rgba: 4294967295
   m_UseWorldSpace: 1
 --- !u!145 &14500000
 SpringJoint:

@@ -7,6 +7,7 @@ public class Bond : MonoBehaviour {
 	public BondAttachment attachment2;
 	public GameObject linkPrefab;
 	public List<BondLink> links;
+	public float linksPerTextureRepeat = 8;
 	public GameObject bondPullPrefab;
 	private SpringJoint pullSpring1;
 	private SpringJoint pullSpring2;
@@ -309,6 +310,11 @@ public class Bond : MonoBehaviour {
 				attachment2.lineRenderer.SetPosition(i, links[i + links.Count / 2].transform.position);
 			}
 		}
+
+		// Tile texture based on link count.
+		float textureScale = Mathf.Ceil(links.Count / (2 * linksPerTextureRepeat));
+		attachment1.lineRenderer.material.mainTextureScale = new Vector2(textureScale, 1);
+		attachment2.lineRenderer.material.mainTextureScale = new Vector2(textureScale, 1);
 
 		if (isCountEven)
 		{
