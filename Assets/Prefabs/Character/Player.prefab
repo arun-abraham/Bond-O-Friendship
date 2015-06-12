@@ -822,7 +822,7 @@ MonoBehaviour:
   maxShotCount: 5
   shotSpread: 30
   minShotFactor: .75
-  passForce: 1000
+  passForce: 2000
   movingBonusFactor: 1
   preventFluffAttractTime: 1
 --- !u!114 &11400004
@@ -1103,17 +1103,17 @@ MonoBehaviour:
   stats:
     attachSpring1: 0
     attachSpring2: 0
-    linkMass: -1
-    linkDrag: -1
+    linkMass: 10
+    linkDrag: 10
     pullApartMaxFactor: 0
     maxDistance: 16
     relativeWarningDistance: .5
     endsWidth: .0199999996
     midWidth: .5
-    addLinkDistance: .800000012
-    removeLinkDistance: .300000012
-    springForce: 5000
-    springDamper: 5
+    addLinkDistance: 1
+    removeLinkDistance: .400000006
+    springForce: 10000
+    springDamper: 1
     relativeRequestDistance: .699999988
     fluffRequestDelay: 0
     fluffPullForce: 1
@@ -2321,7 +2321,23 @@ Prefab:
   serializedVersion: 2
   m_Modification:
     m_TransformParent: {fileID: 0}
-    m_Modifications: []
+    m_Modifications:
+    - target: {fileID: 0}
+      propertyPath: stats.springForce
+      value: 10000
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: stats.linkMass
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: stats.linkDrag
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: stats.springDamper
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 0}
   m_RootGameObject: {fileID: 100012}
