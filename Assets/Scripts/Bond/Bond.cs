@@ -523,6 +523,8 @@ public class Bond : MonoBehaviour {
 
 	private void RemoveLink(int index, bool weightJoints = true)
 	{
+		return;
+
 		// Remove link in bond at the given index, or default to center.
 		if (index < 0)
 		{
@@ -656,7 +658,7 @@ public class Bond : MonoBehaviour {
 				}
 			}
 
-			// Remove all spring joints with no spring force to apply to attachment ... prevent ghost springs from rounding errors.
+			// Remove all spring joints with no spring force to apply to attachment.
 			for (int i = 0; i < links.Count; i++)
 			{
 				if (links[i].jointToAttachment != null && links[i].jointToAttachment.spring <= 0)
