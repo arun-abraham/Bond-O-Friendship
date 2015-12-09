@@ -19,7 +19,8 @@ public class SpinPad : WaitPad {
 	private float oldRotateeRotation;
 	public bool completeOnIn = false;
 	public bool completeOnOut = false;
-	private bool wasCompleted = false;
+	[HideInInspector]
+	public bool wasCompleted = false;
 	public float inRadius = 5.5f;
 	public float outRadius = 5.5f;
 	public float currentRadius = 5.5f;
@@ -34,12 +35,14 @@ public class SpinPad : WaitPad {
 	public float dragIncreaseSpeed = 50;
 	public float membraneAttachmentSpring = 50;
 	public int spinInhibitors = 0;
+	public int spinBackInhibitors = 0;
 	public LineRenderer innerLine;
 	public LineRenderer outerLine;
 	public Color lineInactiveColor = new Color(0.5f, 0.5f, 0.5f, 0.4f);
 	public Color lineNotCompletedColor = new Color(0.75f, 0.75f, 0.75f, 0.5f);
 	public Color lineCompletedColor = new Color(1.0f, 1.0f, 1.0f, 0.8f);
 	public static float nonCompleteThreshold = 0.95f;
+	public bool forceComplete = false;
 
 	void Start()
 	{
@@ -120,7 +123,7 @@ public class SpinPad : WaitPad {
 			float progress = (rotationProgress / 2) + 0.5f;
 			currentRadius = (outRadius * (1 - progress)) + (inRadius * progress);
 
-			if ((completeOnIn && IsAtLimit(SpinLimit.PULL_END)) || (completeOnOut && IsAtLimit(SpinLimit.PUSH_END)))
+			if ((completeOnIn && IsAtLimit(SpinLimit.PULL_END)) || (completeOnOut && IsAtLimit(SpinLimit.PUSH_END)) || forceComplete)
 			{
 				if (!wasCompleted)
 				{
@@ -153,11 +156,17 @@ public class SpinPad : WaitPad {
 						}
 					}
 				}
+				forceComplete = false;
 			}
 			else if (wasCompleted && Mathf.Abs(rotationProgress) < nonCompleteThreshold)
 			{
 				wasCompleted = false;
 			}
+		}
+
+		if (activated && membrane1 == null && membrane2 == null)
+		{
+			rotatee.SetActive(false);
 		}
 
 		if (wallEnd1 != null && wallEnd1Collider != null)
@@ -251,6 +260,11 @@ public class SpinPad : WaitPad {
 				}
 				SetLineColors();
 			}
+			else if ((rotationChange > 0 && spinInhibitors > 0) || (rotationChange < 0 && spinBackInhibitors > 0))
+			{
+				newWallEndPos1 = oldWallEndPos1;
+				newWallEndPos2 = oldWallEndPos2;
+			}
 			else
 			{
 				// If not at the ends of the rotation range, update rotation progress.
@@ -277,7 +291,7 @@ public class SpinPad : WaitPad {
 		}
 		else
 		{
-			wall1Bonded = membrane1.IsBondMade(Globals.Instance.player1.character.bondAttachable) || membrane1.IsBondMade(Globals.Instance.player2.character.bondAttachable);
+			wall1Bonded = membrane1.IsBondMade(Globals.Instance.Player1.character.bondAttachable) || membrane1.IsBondMade(Globals.Instance.Player2.character.bondAttachable);
 		}
 
 		bool wall2Bonded = false;
@@ -287,13 +301,13 @@ public class SpinPad : WaitPad {
 		}
 		else
 		{
-			wall2Bonded = membrane2.IsBondMade(Globals.Instance.player1.character.bondAttachable) || membrane2.IsBondMade(Globals.Instance.player2.character.bondAttachable);
+			wall2Bonded = membrane2.IsBondMade(Globals.Instance.Player1.character.bondAttachable) || membrane2.IsBondMade(Globals.Instance.Player2.character.bondAttachable);
 		}
 
 		bool helmetsExist = (helmet1 != null && helmet2 != null) && (helmet1.gameObject.activeInHierarchy && helmet2.gameObject.activeInHierarchy);
-		bool spinInhibited = spinInhibitors > 0;
+		//bool spinInhibited = spinInhibitors > 0;
 
-		return wall1Bonded && wall2Bonded && !helmetsExist && !spinInhibited;
+		return wall1Bonded && wall2Bonded && !helmetsExist;// && !spinInhibited;
 	}
 
 	private void CheckHelmets()

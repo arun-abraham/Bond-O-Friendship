@@ -19,16 +19,22 @@ public class ClusterNode : MonoBehaviour {
 	protected Color fadeColor;
 	protected float colorCheck;
 	protected Color startingcolor;
-	protected Collider lighter = null;
+	protected List<Collider> lighters = new List<Collider>();
 	public Color bondColor;
+	public bool particlesAtCollision = false;
 
 	[Header("Optional Wall Pairing")]
 	public GameObject pairedWall;
 	public Renderer[] wallRenderers;
 	private float startWallAlpha;
+    public bool shrinking;
+    private Vector3 pairedWallStartingSize;
+    public float shrinkSpeed = 3.0f;
+    private float shrinkTimer;
+    public float growSpeed = 3.0f;
 
-	// Use this for initialization
-	virtual protected void Start () {
+    // Use this for initialization
+    virtual protected void Start () {
 		if(nodeRenderers == null || nodeRenderers.Length < 1)
 		{
 			nodeRenderers = GetComponentsInChildren<Renderer>();
@@ -41,8 +47,9 @@ public class ClusterNode : MonoBehaviour {
 		{
 			wallRenderers = pairedWall.GetComponentsInChildren<Renderer>();
 			startWallAlpha = wallRenderers[0].material.color.a;
-		}
-		colorSet = true;
+            pairedWallStartingSize = pairedWall.transform.localScale;
+        }
+        colorSet = true;
 	}
 	
 	// Update is called once per frame
@@ -73,8 +80,10 @@ public class ClusterNode : MonoBehaviour {
 
 			if (pairedWall != null && (wallRenderers[0].material.color.a > startWallAlpha / 2 || wallRenderers[0].material.color.a > 0 && targetPuzzle.solved))
 			{
-				if(controlColor)
-					{
+                if (targetPuzzle.individualBlockerFade == true)
+                    shrinking = true;
+				else if(controlColor)
+				{
 					for (int i = 0; i < wallRenderers.Length; i++)
 					{
 						Color newWallColor = wallRenderers[i].material.color;
@@ -84,30 +93,36 @@ public class ClusterNode : MonoBehaviour {
 				}
 				if (wallRenderers[0].material.color.a <= 0)
 				{
-					pairedWall.GetComponent<Collider>().enabled = false; ;
+					pairedWall.GetComponent<Collider>().enabled = false;
 				}
 			}
 			
 
-			if (!targetPuzzle.solved && cooldownTime > 0 && lighter == null)
+			if (!targetPuzzle.solved && cooldownTime > 0 && lighters.Count < 1)
 			{
 				timer -= Time.deltaTime;
 				if (timer <= 0)
 				{
-					lit = false;
-					if(controlColor)
-					{
-						for (int i = 0; i < nodeRenderers.Length; i++)
-						{
-							nodeRenderers[i].material.color = startingcolor;
-						}
-					}
+                    ResetNode();
 				}
 				
 			}
-			
-		}
-		else if (pairedWall != null && wallRenderers[0].material.color.a < startWallAlpha)
+            if (pairedWall != null && shrinking && pairedWall.transform.localScale.x > 0.05f)
+            {
+                pairedWall.transform.localScale -= new Vector3(1, 1, 1) * shrinkSpeed * Time.deltaTime;
+                if (pairedWall.transform.localScale.x <= 0.1f)
+                    pairedWall.GetComponent<Collider>().enabled = false;
+            }
+        }
+        if (pairedWall != null && !shrinking && pairedWall.transform.localScale.x < pairedWallStartingSize.x && targetPuzzle.individualBlockerFade == true)
+        {
+            pairedWall.transform.localScale += new Vector3(1, 1, 1) * growSpeed * Time.deltaTime;
+            if (pairedWall.transform.localScale.x >= 0.01f)
+                pairedWall.GetComponent<Collider>().enabled = true;
+            if (pairedWall.transform.localScale.x > pairedWallStartingSize.x)
+                pairedWall.transform.localScale = pairedWallStartingSize;
+        }
+        else if (pairedWall != null && wallRenderers[0].material.color.a < startWallAlpha)
 		{
 			if(controlColor)
 			{
@@ -139,14 +154,27 @@ public class ClusterNode : MonoBehaviour {
 		}
 	}
 
+    public void ResetNode()
+    {
+        lit = false;
+        if (targetPuzzle.individualBlockerFade == true)
+            shrinking = false;
+        if (controlColor)
+        {
+            for (int i = 0; i < nodeRenderers.Length; i++)
+            {
+                nodeRenderers[i].material.color = startingcolor;
+            }
+        }
+    }
    
 
-    virtual protected void OnCollisionEnter(Collision col)
+	virtual protected void OnCollisionEnter(Collision col)
 	{
 		CheckCollision(col.collider);
 	}
 
-    virtual protected void OnTriggerEnter(Collider col)
+	virtual protected void OnTriggerEnter(Collider col)
 	{
 		CheckCollision(col);
 	}
@@ -159,13 +187,13 @@ public class ClusterNode : MonoBehaviour {
 		}
 
 		Color playerColor = new Color();
-		if (col == Globals.Instance.player1.character.bodyCollider)
+		if (col == Globals.Instance.Player1.character.bodyCollider)
 		{
-			playerColor = Globals.Instance.player1.character.colors.baseColor;
+			playerColor = Globals.Instance.Player1.character.colors.baseColor;
 		}
-		else if (col == Globals.Instance.player2.character.bodyCollider)
+		else if (col == Globals.Instance.Player2.character.bodyCollider)
 		{
-			playerColor = Globals.Instance.player2.character.colors.baseColor;
+			playerColor = Globals.Instance.Player2.character.colors.baseColor;
 		}
 		else if (col.gameObject.layer == LayerMask.NameToLayer("Bond"))
 		{
@@ -187,14 +215,14 @@ public class ClusterNode : MonoBehaviour {
 		if (targetPuzzle.nodeParticle != null)
 		{
 			ParticleSystem part = (ParticleSystem)Instantiate(targetPuzzle.nodeParticle);
-			part.transform.position = transform.position;
+			part.transform.position = (particlesAtCollision) ? part.transform.position = col.transform.position : transform.position;
 			part.startColor = playerColor;
 			part.transform.parent = transform;
 			part.transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
 			Destroy(part.gameObject, 2.0f);
 		}
 
-		lighter = col;
+		lighters.Add(col);
 		timer = cooldownTime;
 		if (!lit)
 		{
@@ -210,17 +238,26 @@ public class ClusterNode : MonoBehaviour {
 
 	void OnColliderExit(Collision col)
 	{
-		if (col.collider == lighter)
+		for (int i = 0; i < lighters.Count; i++)
 		{
-			lighter = null;
+			if (lighters[i] == col.collider || lighters[i] == null)
+			{
+				lighters.Remove(lighters[i]);
+				i--;
+			}
 		}
+		
 	}
 
 	void OnTriggerExit(Collider col)
 	{
-		if (col == lighter)
+		for (int i = 0; i < lighters.Count; i++)
 		{
-			lighter = null;
+			if (lighters[i] == col || lighters[i] == null)
+			{
+				lighters.Remove(lighters[i]);
+				i--;
+			}
 		}
 	}
 }

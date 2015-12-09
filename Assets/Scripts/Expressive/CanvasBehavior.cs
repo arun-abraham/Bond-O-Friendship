@@ -8,12 +8,19 @@ public class CanvasBehavior : MonoBehaviour {
 	public GameObject player1;
 	public GameObject player2;
 	public GameObject pairedPlayer;
-	private Color canvasColor;
+    public GameObject canvasBGLight;
+    public ParticleSystem lightParticle;
+    private Color canvasColor;
 	private float alpha;
 	public bool changeColor = true;
 	public float maxCheckDistance = 2;
 	public float minPaintRadius = 1;
 	public float maxPaintRadius = 5;
+    public bool lightActive;
+    public GameObject optionalSecondPairedCanvas;
+    public float canvasBGLightGlowSpeed = 0.04f;
+    private bool p1OnCanvas;
+    private bool p2OnCanvas;
 	[HideInInspector]
 	public CapsuleCollider canvasCollider;
 
@@ -68,6 +75,10 @@ public class CanvasBehavior : MonoBehaviour {
 
 		nodeCollisionTest = GetComponent<PaintAndNodeCollisionTest>();
 		canvasCollider = GetComponent<CapsuleCollider>();
+        if (canvasBGLight != null)
+        {
+            lightParticle.startColor = canvasBGLight.GetComponent<Renderer>().material.color;
+        }
 	}
 	
 	// Update is called once per frame
@@ -108,18 +119,51 @@ public class CanvasBehavior : MonoBehaviour {
 		{
 			paintCopier.transform.position = pairedPlayer.transform.position + mirrorDistance;
 		}
+        if (canvasBGLight != null)
+        {
+            if (lightActive && canvasBGLight.GetComponent<Renderer>().material.color.a < 1 && (p1OnCanvas || p2OnCanvas))
+            {
+                canvasBGLight.GetComponent<Renderer>().material.color += new Color(0, 0, 0, canvasBGLightGlowSpeed);
+                lightParticle.Play();
+            }
+            else if(!lightActive && canvasBGLight.GetComponent<Renderer>().material.color.a > 0 && (!p1OnCanvas && !p2OnCanvas))
+            {
+                canvasBGLight.GetComponent<Renderer>().material.color -= new Color(0, 0, 0, canvasBGLightGlowSpeed);
+                lightParticle.Stop();
+            }
+        }
 	}
 
 	void OnTriggerEnter (Collider collide)
 	{
-		if(paintCopier == null)
+        if (collide.gameObject.name == "Player 1" || collide.gameObject.name == "Player 2")
+        {
+            if (collide.gameObject.name == "Player 1")
+            {
+                p1OnCanvas = true;
+                pairedCanvas.GetComponent<CanvasBehavior>().p1OnCanvas = true;
+            }
+            if (collide.gameObject.name == "Player 2")
+            {
+                p2OnCanvas = true;
+                pairedCanvas.GetComponent<CanvasBehavior>().p2OnCanvas = true;
+            }
+            lightActive = true;
+            pairedCanvas.GetComponent<CanvasBehavior>().lightActive = true;
+            if(optionalSecondPairedCanvas != null)
+            {
+                optionalSecondPairedCanvas.GetComponent<CanvasBehavior>().lightActive = true;
+                optionalSecondPairedCanvas.GetComponent<CanvasBehavior>().pairedCanvas.GetComponent<CanvasBehavior>().lightActive = true;
+            }
+        }
+        if (paintCopier == null)
 		{
 			if(collide.gameObject.name == "Player 1")
 			{
 				player1 = collide.gameObject;
 
-				//Assign canvas variables to player
-				Paint paintScript = player1.GetComponent<Paint>();
+                //Assign canvas variables to player
+                Paint paintScript = player1.GetComponent<Paint>();
 				paintScript.painting = true;
 				paintScript.paintCanvas = this;
 
@@ -134,8 +178,8 @@ public class CanvasBehavior : MonoBehaviour {
 			{
 				player2 = collide.gameObject;
 
-				//Assign canvas variables to paint
-				Paint paintScript = player2.GetComponent<Paint>();
+                //Assign canvas variables to paint
+                Paint paintScript = player2.GetComponent<Paint>();
 				paintScript.painting = true;
 				paintScript.paintCanvas = this;
 
@@ -150,14 +194,34 @@ public class CanvasBehavior : MonoBehaviour {
 
 	void OnTriggerExit (Collider collide)
 	{
-		if(paintCopier == null)
+        if (collide.gameObject.name == "Player 1" || collide.gameObject.name == "Player 2")
+        {
+            if (collide.gameObject.name == "Player 1")
+            {
+                p1OnCanvas = false;
+                pairedCanvas.GetComponent<CanvasBehavior>().p1OnCanvas = false;
+            }
+            if (collide.gameObject.name == "Player 2")
+            {
+                p2OnCanvas = false;
+                pairedCanvas.GetComponent<CanvasBehavior>().p2OnCanvas = false;
+            }
+            lightActive = false;
+            pairedCanvas.GetComponent<CanvasBehavior>().lightActive = false;
+            if (optionalSecondPairedCanvas != null)
+            {
+                optionalSecondPairedCanvas.GetComponent<CanvasBehavior>().lightActive = false;
+                optionalSecondPairedCanvas.GetComponent<CanvasBehavior>().pairedCanvas.GetComponent<CanvasBehavior>().lightActive = false;
+            }
+        }
+        if (paintCopier == null)
 		{
 			if(collide.gameObject.name == "Player 1")
 			{
 				player1 = collide.gameObject;
 
-				//Assign canvas variables to paint
-				Paint paintScript = player1.GetComponent<Paint>();
+                //Assign canvas variables to paint
+                Paint paintScript = player1.GetComponent<Paint>();
 				paintScript.painting = false;
 				paintScript.paintCanvas = null;
 
@@ -171,8 +235,8 @@ public class CanvasBehavior : MonoBehaviour {
 			{
 				player2 = collide.gameObject;
 
-				//Assign canvas variables to paint
-				Paint paintScript = player2.GetComponent<Paint>();
+                //Assign canvas variables to paint
+                Paint paintScript = player2.GetComponent<Paint>();
 				paintScript.painting = false;
 				paintScript.paintCanvas = null;
 

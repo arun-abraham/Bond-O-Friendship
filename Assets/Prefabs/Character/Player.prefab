@@ -871,7 +871,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a97608f0f6c9bbb41a04584ce96f48bf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  body: {fileID: 5400000}
+  findBody: 0
+  body: {fileID: 0}
   handleFluffAttachment: 0
   bondAtContactPoint: 0
   attachmentColor: {r: 0, g: 0, b: .996078432, a: 1}
@@ -986,6 +987,7 @@ MonoBehaviour:
   stuckFluff: {fileID: 0}
   stickOffset: {x: 0, y: 0, z: 0}
   stickDirection: {x: 0, y: 0, z: 1}
+  moveToCollision: 0
 --- !u!114 &11443356
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1009,7 +1011,7 @@ MonoBehaviour:
     midWidth: .5
     addLinkDistance: 1
     removeLinkDistance: .400000006
-    springForce: 100
+    springForce: 300
     springDamper: 1
     relativeRequestDistance: .699999988
     fluffRequestDelay: 0
@@ -1086,7 +1088,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetRenderer: {fileID: 9600002}
   renderBase: 3000
-  renderOffset: 300
+  renderOffset: 352
   forceRendererOn: 0
 --- !u!114 &11496332
 MonoBehaviour:
@@ -1101,7 +1103,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetRenderer: {fileID: 9600000}
   renderBase: 3000
-  renderOffset: 300
+  renderOffset: 352
   forceRendererOn: 0
 --- !u!114 &11496334
 MonoBehaviour:
@@ -1116,7 +1118,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetRenderer: {fileID: 9600004}
   renderBase: 3000
-  renderOffset: 300
+  renderOffset: 352
   forceRendererOn: 0
 --- !u!114 &11496336
 MonoBehaviour:
@@ -2230,7 +2232,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 0}
       propertyPath: stats.springForce
-      value: 100
+      value: 300
       objectReference: {fileID: 0}
     - target: {fileID: 0}
       propertyPath: stats.linkMass
@@ -2291,6 +2293,14 @@ Prefab:
     - target: {fileID: 0}
       propertyPath: stats.maxFluffCapacity
       value: 24
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: body
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
+      propertyPath: findBody
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 0}

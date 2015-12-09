@@ -4,12 +4,13 @@ using System.Collections.Generic;
 
 public class MembraneShell : MonoBehaviour {
 	public bool destroyWhenBroken = true;
+	public bool disblePlayerWhenBroken = false;
 	[SerializeField]
 	public List<MembraneWall> createdWalls;
 	public GameObject membraneWallOriginal;
 	public bool createOnStart = true;
 	public int wallCount = 4;
-	private bool Breaking = false;
+	public bool breaking = false;
 	public float buildDelay = -1;
 
 	void Start()
@@ -72,7 +73,7 @@ public class MembraneShell : MonoBehaviour {
 			}
 		}
 
-		Breaking = false;
+		breaking = false;
 	}
 
 	public bool IsBondMade(BondAttachable partner = null, List<Membrane> ignoreMembranes = null)
@@ -108,9 +109,9 @@ public class MembraneShell : MonoBehaviour {
 
 	private void MembraneWallBreaking(MembraneWall BreakingMembrane)
 	{
-		if (createdWalls.Contains(BreakingMembrane) && !Breaking)
+		if (createdWalls.Contains(BreakingMembrane) && !breaking)
 		{
-			Breaking = true;
+			breaking = true;
 			if (transform.parent != null)
 			{
 				transform.parent.SendMessage("MembraneBreaking", this, SendMessageOptions.DontRequireReceiver);
@@ -139,6 +140,10 @@ public class MembraneShell : MonoBehaviour {
 		if (transform.parent != null)
 		{
 			transform.parent.SendMessage("MembraneShellBroken", this, SendMessageOptions.DontRequireReceiver);
+		}
+		if (disblePlayerWhenBroken && Globals.Instance != null)
+		{
+			Globals.Instance.allowInput = false;
 		}
 		if (destroyWhenBroken)
 		{

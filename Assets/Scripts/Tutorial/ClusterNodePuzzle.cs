@@ -10,6 +10,8 @@ public class ClusterNodePuzzle : MonoBehaviour {
 	public bool solved;
 	public StreamReactionList streamReaction;
 
+    public bool individualBlockerFade = false;
+
 	public GameObject streamBlocker;
 	public GameObject streamBlocker2;
 
@@ -55,6 +57,15 @@ public class ClusterNodePuzzle : MonoBehaviour {
         {
             dependentSolved = true;
             NodeColored();
+        }
+    }
+
+    public void UnlightNodes()
+    {
+        for(int i = 0; i < nodes.Count; i++)
+        {
+            if (nodes[i].lit)
+                nodes[i].ResetNode();
         }
     }
 	
@@ -126,7 +137,10 @@ public class ClusterNodePuzzle : MonoBehaviour {
 				Destroy(streamBlocker2);
 			for (int i = 0; i < listeners.Count; i++)
 			{
-				listeners[i].SendMessage("ClusterNodesSolved", this, SendMessageOptions.DontRequireReceiver);
+				if (listeners[i] != null)
+				{
+					listeners[i].SendMessage("ClusterNodesSolved", this, SendMessageOptions.DontRequireReceiver);
+				}
 			}
 		}
 	}

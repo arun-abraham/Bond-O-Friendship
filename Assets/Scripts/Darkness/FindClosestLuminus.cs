@@ -6,19 +6,20 @@ public class FindClosestLuminus : MonoBehaviour {
 
 	public Luminus[] luminusArray;
 	public Luminus l1, l2;   //Closest to P1, P2
-	[HideInInspector] public GameObject p1, p2;   //Players
+	//[HideInInspector] public GameObject p1, p2;   //Players
 	[HideInInspector] public SetShaderData_DarkAlphaMasker darkMaskScript;    //on the alpha masking plane
 	[HideInInspector] public float l1p1_sqMag, l2p2_sqMag;    //shortest distances (useful in shader)
 
 	// Use this for initialization
 	void Start () 
 	{
-		p1 = Globals.Instance.player1.gameObject;
-		p2 = Globals.Instance.player2.gameObject;
+		//p1 = Globals.Instance.Player1.gameObject;
+		//p2 = Globals.Instance.Player2.gameObject;
 
 		//FindAllLumini();
 
-		darkMaskScript = GameObject.Find("DarkMask").GetComponent<SetShaderData_DarkAlphaMasker>();
+		//darkMaskScript = GameObject.Find("DarkMask").GetComponent<SetShaderData_DarkAlphaMasker>();
+		darkMaskScript = Globals.Instance.darknessMask;
 		//Find which ones are closest at the beginning
 		FindClosestLumini();
 		SendDataToDarkMask();
@@ -78,9 +79,9 @@ public class FindClosestLuminus : MonoBehaviour {
 
 		Luminus newL1, newL2, l2Alt;
 		newL1 = newL2 = l2Alt = luminusArray[0];
-		Vector3 l1p1 = p1.transform.position - newL1.transform.position;
-		Vector3 l2p2 = p2.transform.position - newL2.transform.position;
-		Vector3 l2Altp2 = p2.transform.position - l2Alt.transform.position;
+		Vector3 l1p1 = Globals.Instance.Player1.transform.position - newL1.transform.position;
+		Vector3 l2p2 = Globals.Instance.Player2.transform.position - newL2.transform.position;
+		Vector3 l2Altp2 = Globals.Instance.Player1.transform.position - l2Alt.transform.position;
 		Vector3 temp;
 
 		l1p1_sqMag = l1p1.sqrMagnitude;
@@ -89,38 +90,35 @@ public class FindClosestLuminus : MonoBehaviour {
 
 		for (int i = 1; i < luminusArray.Length; i++)
 		{
-			if (true || luminusArray[i].isOn)
+			//Closest to p1
+			temp = Globals.Instance.Player1.transform.position - luminusArray[i].transform.position;
+			//if a different luminus is closer
+			if (temp.sqrMagnitude < l1p1_sqMag)
 			{
-				//Closest to p1
-				temp = p1.transform.position - luminusArray[i].transform.position;
-				//if a different luminus is closer
-				if (temp.sqrMagnitude < l1p1_sqMag)
+				newL1 = luminusArray[i];
+				l1p1_sqMag = temp.sqrMagnitude;
+			}
+
+			//Closest to P2
+			temp = Globals.Instance.Player2.transform.position - luminusArray[i].transform.position;
+			//if a different luminus is closer
+			if (temp.sqrMagnitude < l2p2_sqMag)
+			{
+				// Store the previous nearest luminus, in case the nearest is shared with player one.
+				if ((!l2Alt.isOn || l2Alt == newL1 || l2p2_sqMag < l2Altp2_sqMag) && newL1 != newL2)
 				{
-					newL1 = luminusArray[i];
-					l1p1_sqMag = temp.sqrMagnitude;
+					l2Alt = newL2;
+					l2Altp2_sqMag = l2p2_sqMag;
 				}
 
-				//Closest to P2
-				temp = p2.transform.position - luminusArray[i].transform.position;
-				//if a different luminus is closer
-				if (temp.sqrMagnitude < l2p2_sqMag)
-				{
-					// Store the previous nearest luminus, in case the nearest is shared with player one.
-					if ((!l2Alt.isOn || l2Alt == newL1 || l2p2_sqMag < l2Altp2_sqMag) && newL1 != newL2)
-					{
-						l2Alt = newL2;
-						l2Altp2_sqMag = l2p2_sqMag;
-					}
-
-					newL2 = luminusArray[i];
-					l2p2_sqMag = temp.sqrMagnitude;
-				}
-				// Store the second nearest luminus, in case the nearest is shared with player one.
-				else if ((l2Alt == newL1 || temp.sqrMagnitude < l2Altp2_sqMag) && newL1 != luminusArray[i])
-				{
-					l2Alt = luminusArray[i];
-					l2Altp2_sqMag = temp.sqrMagnitude;
-				}
+				newL2 = luminusArray[i];
+				l2p2_sqMag = temp.sqrMagnitude;
+			}
+			// Store the second nearest luminus, in case the nearest is shared with player one.
+			else if ((l2Alt == newL1 || temp.sqrMagnitude < l2Altp2_sqMag) && newL1 != luminusArray[i])
+			{
+				l2Alt = luminusArray[i];
+				l2Altp2_sqMag = temp.sqrMagnitude;
 			}
 		}
 

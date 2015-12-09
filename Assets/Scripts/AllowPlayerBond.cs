@@ -5,7 +5,7 @@ public class AllowPlayerBond : MonoBehaviour {
 	public WaitPad triggerPad;
 	public ClusterNodePuzzleGroup triggerNodeGroup;
 	public MembraneWall triggerMembraneWall;
-	public float startingBondLength = 35;
+	public bool allowBond = true;
 	public bool makeBond = false;
 	public bool autoCheck = true;
 	public bool destroyOnUse = true;
@@ -33,14 +33,20 @@ public class AllowPlayerBond : MonoBehaviour {
 	public void AllowBond()
 	{
 		// If disabled in editor, do not change player bond stats.
-		if (!(editorDisablable && Globals.Instance.earlyBondInEditor && Application.isEditor))
+		if (!(editorDisablable && Globals.Instance.earlyBondInEditor && Application.isEditor) && !Globals.Instance.bondAllowed)
 		{
-			Globals.Instance.player1.character.bondAttachable.bondOverrideStats.stats.maxDistance = startingBondLength;
-			Globals.Instance.player2.character.bondAttachable.bondOverrideStats.stats.maxDistance = startingBondLength;
+			Globals.Instance.Player1.character.bondAttachable.enabled = allowBond;
+			Globals.Instance.Player2.character.bondAttachable.enabled = allowBond;
 			
 			if (makeBond)
 			{
-				Globals.Instance.player1.character.bondAttachable.AttemptBond(Globals.Instance.player2.character.bondAttachable, Globals.Instance.player1.transform.position, true);
+				Globals.Instance.Player1.character.bondAttachable.AttemptBond(Globals.Instance.Player2.character.bondAttachable, Globals.Instance.Player1.transform.position, true);
+
+			}
+
+			if (allowBond)
+			{
+				Globals.Instance.bondAllowed = true;
 			}
 		}
 
