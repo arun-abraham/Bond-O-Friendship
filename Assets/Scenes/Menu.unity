@@ -17660,7 +17660,7 @@ MonoBehaviour:
   editorPlaceholder: {fileID: 1088759076}
   atmosphere:
   - {fileID: 684037100}
-  spawnOffset: {x: 9.39999962, y: -264.799988, z: -401}
+  spawnOffset: {x: -160, y: -278.399994, z: -401}
   spawnRotation: {x: 0, y: 0, z: 0}
   spawnOnStart: 1
 --- !u!1 &1426356748
@@ -26406,6 +26406,18 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 449134, guid: 7ea575b0b6d0c7e4b84ae0376db9a644, type: 2}
       propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 159974, guid: 7ea575b0b6d0c7e4b84ae0376db9a644, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 477198, guid: 7ea575b0b6d0c7e4b84ae0376db9a644, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: -.00380000006
+      objectReference: {fileID: 0}
+    - target: {fileID: 477198, guid: 7ea575b0b6d0c7e4b84ae0376db9a644, type: 2}
+      propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
